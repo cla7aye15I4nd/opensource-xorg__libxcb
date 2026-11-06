@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "target": "cla7aye15I4nd/opensource-xorg__libxcb",
+  "canonical_upstream": "https://gitlab.freedesktop.org/xorg/lib/libxcb",
+  "source": {
+    "kind": "git",
+    "upstream_url": "https://gitlab.freedesktop.org/xorg/lib/libxcb.git",
+    "branch": "master",
+    "revision": "d4e07bab5729c7d7cc3d2b95568cd9a661a53c4f"
+  },
+  "publication_review": {
+    "license_files": [
+      "COPYING"
+    ],
+    "notice_files": [],
+    "public_fixture_key_markers": []
+  },
+  "upstream_tree_sha256": "b78f80e6fbff1b9269c87d845202613b6c010c78050dfc771ddd0dd164e244f5",
+  "tree_sha256": "6ecb372ce74f8191861c3d65e20f1d308237e50cb0ed1b3a50f975722ebe4701"
+}
