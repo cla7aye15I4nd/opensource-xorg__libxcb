@@ -846,7 +846,8 @@ def _c_serialize_helper_insert_padding(context, complex_type, code_lines, space,
         code_lines.append('%s    if (0 != xcb_pad) {' % space)
 
         if 'serialize' == context:
-            code_lines.append('%s        xcb_parts[xcb_parts_idx].iov_base = xcb_pad0;' % space)
+            # xcb_send_request() fills this with zero'd buffer
+            code_lines.append('%s        xcb_parts[xcb_parts_idx].iov_base = NULL;' % space)
             code_lines.append('%s        xcb_parts[xcb_parts_idx].iov_len = xcb_pad;' % space)
             code_lines.append('%s        xcb_parts_idx++;' % space)
         elif context in ('unserialize', 'unpack', 'sizeof'):
@@ -1107,8 +1108,8 @@ def _c_serialize_helper_fields_fixed_size(context, self, field,
             if field.type.nmemb == 1:
                 value += "&xcb_pad;"
             else:
-                # we could also set it to 0, see definition of xcb_send_request()
-                value = '    xcb_parts[xcb_parts_idx].iov_base = xcb_pad0;'
+                # xcb_send_request() fills this with zero'd buffer
+                value = '    xcb_parts[xcb_parts_idx].iov_base = NULL;'
                 length += "*%d" % field.type.nmemb
 
         else:
@@ -1451,7 +1452,6 @@ def _c_serialize(context, self):
     variable_size_fields = count
     if 'serialize' == context:
         temp_vars.append('    unsigned int xcb_pad = 0;')
-        temp_vars.append('    char xcb_pad0[3] = {0, 0, 0};')
         temp_vars.append('    struct iovec xcb_parts[%d];' % count)
         temp_vars.append('    unsigned int xcb_parts_idx = 0;')
         temp_vars.append('    unsigned int xcb_block_len = 0;')
@@ -1518,10 +1518,13 @@ def _c_serialize(context, self):
 
                 # variable sized fields
                 _c('    for(i=0; i<xcb_parts_idx; i++) {')
-                _c('        if (0 != xcb_parts[i].iov_base && 0 != xcb_parts[i].iov_len)')
-                _c('            memcpy(xcb_tmp, xcb_parts[i].iov_base, xcb_parts[i].iov_len);')
-                _c('        if (0 != xcb_parts[i].iov_len)')
+                _c('        if (0 != xcb_parts[i].iov_len) {')
+                _c('            if (0 != xcb_parts[i].iov_base)')
+                _c('                memcpy(xcb_tmp, xcb_parts[i].iov_base, xcb_parts[i].iov_len);')
+                _c('            else')
+                _c('                memset(xcb_tmp, 0, xcb_parts[i].iov_len);')
                 _c('            xcb_tmp += xcb_parts[i].iov_len;')
+                _c('        }')
                 _c('    }')
 
         # unserialize: assign variable size fields individually
