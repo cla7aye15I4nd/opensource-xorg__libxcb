@@ -73,14 +73,14 @@ enum auth_protos {
 #define AUTH_PROTO_XDM_AUTHORIZATION "XDM-AUTHORIZATION-1"
 #define AUTH_PROTO_MIT_MAGIC_COOKIE "MIT-MAGIC-COOKIE-1"
 
-static const char *authnames[N_AUTH_PROTOS] = {
+static const char *const authnames[N_AUTH_PROTOS] = {
 #ifdef HASXDMAUTH
     AUTH_PROTO_XDM_AUTHORIZATION,
 #endif
     AUTH_PROTO_MIT_MAGIC_COOKIE,
 };
 
-static int authnameslen[N_AUTH_PROTOS] = {
+static const int authnameslen[N_AUTH_PROTOS] = {
 #ifdef HASXDMAUTH
     sizeof(AUTH_PROTO_XDM_AUTHORIZATION) - 1,
 #endif
