@@ -2351,13 +2351,14 @@ def _c_request_helper(self, name, void, regular, aux=False, reply_fds=False):
            spacing, c_pointer, field.c_field_name, comma)
 
     count = 2
+    need_end_pad = False
     if not self.c_var_followed_by_fixed_fields:
-        for field in param_fields:
+        for field in self.fields:
             if not field.type.fixed_size() and field.wire:
-                count = count + 2
-                if field.type.c_need_serialize or field.type.c_need_sizeof:
-                    # _serialize() keeps track of padding automatically
-                    count -= 1
+                count += 1
+                need_end_pad = True
+    if need_end_pad:
+        count += 1
     dimension = count + 2
 
     _c('{')
@@ -2429,6 +2430,16 @@ def _c_request_helper(self, name, void, regular, aux=False, reply_fds=False):
                                               aux_var)[2]
         return ", ".join(a[2] for a in serialize_args)
 
+    def get_pad_len(count, align):
+        # the length of a part that pads parts 4 to count-1 to align bytes;
+        # parts 2 and 3, the fixed fields and their padding, are a multiple of 4
+        lens = ['xcb_parts[%d].iov_len' % i for i in range(4, count)]
+        if not lens:
+            return '0'
+        if len(lens) == 1:
+            return '-%s & %d' % (lens[0], align - 1)
+        return '-(%s) & %d' % (' + '.join(lens), align - 1)
+
     # calls in order to free dyn. all. memory
     free_calls = []
 
@@ -2441,11 +2452,15 @@ def _c_request_helper(self, name, void, regular, aux=False, reply_fds=False):
 
         count = 4
 
-        for field in param_fields:
+        for field in self.fields:
             if field.wire and not field.type.fixed_size():
                 _c('    /* %s %s */', field.type.c_type, field.c_field_name)
-                # default: simple cast to char *
-                if not field.type.c_need_serialize and not field.type.c_need_sizeof:
+                if field.type.is_pad:
+                    # lists aren't padded unless the protocol says so
+                    _c('    xcb_parts[%d].iov_base = 0;', count)
+                    _c('    xcb_parts[%d].iov_len = %s;', count, get_pad_len(count, field.type.align))
+                elif not field.type.c_need_serialize and not field.type.c_need_sizeof:
+                    # default: simple cast to char *
                     _c('    xcb_parts[%d].iov_base = (char *) %s;', count, field.c_field_name)
                     if field.type.is_list:
                         if field.type.member.fixed_size():
@@ -2489,11 +2504,9 @@ def _c_request_helper(self, name, void, regular, aux=False, reply_fds=False):
                         _c('      %s (%s);', func_name, serialize_args)
 
                 count += 1
-                if not (field.type.c_need_serialize or field.type.c_need_sizeof):
-                    # the _serialize() function keeps track of padding automatically
-                    _c('    xcb_parts[%d].iov_base = 0;', count)
-                    _c('    xcb_parts[%d].iov_len = -xcb_parts[%d].iov_len & 3;', count, count-1)
-                    count += 1
+        if need_end_pad:
+            _c('    xcb_parts[%d].iov_base = 0;', count)
+            _c('    xcb_parts[%d].iov_len = %s;', count, get_pad_len(count, 4))
 
     # elif self.c_var_followed_by_fixed_fields:
     else:

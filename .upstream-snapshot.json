@@ -6,7 +6,7 @@
     "kind": "git",
     "upstream_url": "https://gitlab.freedesktop.org/xorg/lib/libxcb.git",
     "branch": "master",
-    "revision": "0be1b59324900cef08247a9f62636967d9298ebf"
+    "revision": "aa7f3256060451ad65a38feeccf792f44181a4e0"
   },
   "publication_review": {
     "license_files": [
@@ -15,6 +15,6 @@
     "notice_files": [],
     "public_fixture_key_markers": []
   },
-  "upstream_tree_sha256": "bedac91ef6014e38bebbebfd1d7fe8f2cc8a5abc4b4e64a8f60427b12acc2568",
-  "tree_sha256": "ee19a7e898cf52f01f8de074fe34f3fa304596c370e3a4ff61e15aca72a6d957"
+  "upstream_tree_sha256": "7a3ca68c5538e406f0ff012ab335f619a143c1e9bb60ef5f2878591857056f8b",
+  "tree_sha256": "beb9cc753ace4f3909dd583e7282605756f0e205995d27fbc3cc217294c4d14a"
 }
